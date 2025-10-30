@@ -1,13 +1,8 @@
-package com.miras.pruebas;
+package com.miras.javaUtilities;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Stream;
-import javax.swing.JOptionPane;
-import javax.swing.JFrame;
-import org.apache.commons.math3.complex.Complex;
+import com.miras.javaUtilities.Algebra.Fields.Vector;
+
+import java.util.TreeMap;
 
 public class Pruebas {
 
@@ -47,23 +42,12 @@ public class Pruebas {
         System.out.println(p1.mult(p1, p2).toString());
         System.out.println(p1.derivate(p1.mult(p1, p2)).toString());
 */
-        
-        Integer[][] a = {
-            {1, 0, 0},
-            {4, 6, 3},
-            {6, 2, 3}
-        };
-        
-        Integer[] b = {1, 2, 3};
-        Integer[] c = {1, 2, 3};
-        
-        Vector<Integer> vect = new Vector(b);
-        Vector<Integer> vect2 = new Vector(c);
-        
-        Double[][] w = new Double[3][5];
-        
-        System.out.println(vect.toMatrix('c').mult(vect2.toMatrix('r')).toString());
-        
+
+        GeneralFunctionTree generalFunctionTree = new GeneralFunctionTree(2, 1, new TreeMap[]{new FunctionTreeBlock(new Variable(0, "x"), ElementalFunctions.VARIABLE.get().getTree()).mult(new FunctionTreeBlock(new Variable(1, "y"), ElementalFunctions.VARIABLE.get().getTree())).getRepr()});
+
+        GeneralFunctionTree derivative = (GeneralFunctionTree) generalFunctionTree.getDerivative(new Variable(0, "x"));
+
+        System.out.println(generalFunctionTree.toString());
     }
     
     public static void print(String string) {

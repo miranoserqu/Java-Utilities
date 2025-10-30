@@ -1,6 +1,6 @@
 *.large
 *.arr
-src/main/java/com/miras/pruebas/MNIST_test
-src/main/java/com/miras/pruebas/MNIST_test
-src/main/java/com/miras/pruebas/MNIST_train
+src/main/java/com/miras/javaUtilities/MNIST_test
+src/main/java/com/miras/javaUtilities/MNIST_test
+src/main/java/com/miras/javaUtilities/MNIST_train
 *.arr

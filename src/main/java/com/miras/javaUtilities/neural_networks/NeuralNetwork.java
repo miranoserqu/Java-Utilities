@@ -2,14 +2,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.miras.pruebas;
+package com.miras.javaUtilities.neural_networks;
 
+import com.miras.javaUtilities.Algebra.Fields.Matrix;
+import com.miras.javaUtilities.Algebra.Fields.Vector;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -45,14 +45,14 @@ public class NeuralNetwork {
         
         this.weights = new Matrix[nLayers];
         this.biases = new Vector[nLayers];
-        this.weights[0] = new Matrix(aux, 1, 1);
+        this.weights[0] = new Matrix<>(aux, 1, 1);
         this.biases[0] = new Vector(aux[0]);
         
         for(int i = 1; i < nLayers; i++){
             final int fi = i;
             Double[][] w = new Double[nNeurons[i]][nNeurons[i - 1]];
             Double[] z = new Double[nNeurons[i]];
-            this.weights[i] = new Matrix(Stream.of(w)
+            this.weights[i] = new Matrix<>(Stream.of(w)
                     .map(row -> Stream.of(row)
                             .map(x -> rn.nextGaussian())
                             .toArray(Double[]::new))
@@ -178,12 +178,12 @@ public class NeuralNetwork {
     
     public void gradientDescend(Vector<Double>[] error, Matrix<Double>[] weightsError, double learninRate){
         for(int layer = 1; layer < nLayers; layer++){
-            weightsError[layer] = weightsError[layer].multExt(learninRate);
-            if(weightsError[layer].getNorm() < minGrad){
-                weightsError[layer] = weightsError[layer].multExt(weightsError[layer].getNorm() / minGrad);
+            weightsError[layer] = weightsError[layer].scale(learninRate);
+            if(weightsError[layer].mod() < minGrad){
+                weightsError[layer] = weightsError[layer].scale(weightsError[layer].mod() / minGrad);
             }
             this.weights[layer] = this.weights[layer].dif(weightsError[layer]);
-            this.biases[layer] = this.biases[layer].dif(error[layer].multExt(learninRate));
+            this.biases[layer] = this.biases[layer].dif(error[layer].scale(learninRate));
         }
     }
 

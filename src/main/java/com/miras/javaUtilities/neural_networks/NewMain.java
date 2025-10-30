@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
-package com.miras.pruebas;
+package com.miras.javaUtilities.neural_networks;
 
+import com.miras.javaUtilities.Algebra.Fields.Vector;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -15,11 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.Streams;
 
 /**
  *
@@ -45,7 +42,7 @@ public class NewMain {
             {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0},
         };
         
-        File MNIST_train = new File("C:\\Users\\Samir\\Documents\\NetBeansProjects\\pruebas\\src\\main\\java\\com\\miras\\pruebas\\MNIST_train");
+        File MNIST_train = new File("C:\\Users\\samir\\Documents\\NetBeansProjects\\Files\\Java Utilities\\MNIST_train.large");
         Scanner input = new Scanner(MNIST_train);
         
         Double[][] inputs = new Double[60000][784];
@@ -91,8 +88,8 @@ public class NewMain {
         */
         
         System.out.println("Importando weights y biases");
-        ObjectInputStream in2 = new ObjectInputStream(new FileInputStream("C:\\Users\\Samir\\Documents\\NetBeansProjects\\pruebas\\src\\main\\java\\com\\miras\\pruebas\\weights.net"));
-        ObjectInputStream in = new ObjectInputStream(new FileInputStream("C:\\Users\\Samir\\Documents\\NetBeansProjects\\pruebas\\src\\main\\java\\com\\miras\\pruebas\\biases.net"));
+        ObjectInputStream in2 = new ObjectInputStream(new FileInputStream("C:\\Users\\samir\\Documents\\NetBeansProjects\\Files\\Java Utilities\\weights.net"));
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream("C:\\Users\\samir\\Documents\\NetBeansProjects\\Files\\Java Utilities\\biases.net"));
         
         List<Number[]> bia = (List<Number[]>) in.readObject();
         List<Number[][]> weig = (List<Number[][]>) in2.readObject();
@@ -130,7 +127,7 @@ public class NewMain {
         Integer[] nNeurons = {784, 15, 10};
         NeuralNetwork MNIST = new NeuralNetwork(nNeurons, Weig, Bia);
         
-        for(int i = 0; i < 10000; i++){
+        for(int i = 0; i < 100; i++){
             System.out.println("Entrenando");
             System.out.println(i);
             MNIST.train(inputs, answers, 128, "Sigmoid", 10.0);
@@ -140,7 +137,7 @@ public class NewMain {
         List<Number[][]> w = Stream.of(MNIST.getWeights())
                 .map(x -> x == null ? null : (Number[][]) x.getMatrix())
                 .toList();
-        try (ObjectOutputStream out1 = new ObjectOutputStream(new FileOutputStream("C:\\Users\\Samir\\Documents\\NetBeansProjects\\pruebas\\src\\main\\java\\com\\miras\\pruebas\\weights.net"))) {
+        try (ObjectOutputStream out1 = new ObjectOutputStream(new FileOutputStream("C:\\Users\\samir\\Documents\\NetBeansProjects\\Files\\Java Utilities\\weights.net"))) {
             out1.writeObject(w);
         }
         
@@ -148,11 +145,11 @@ public class NewMain {
         List<Double[]>b = Stream.of(MNIST.getBiases())
                 .map(x -> x == null ? null : x.getArray(Double[]::new))
                 .toList();
-        try (ObjectOutputStream out2 = new ObjectOutputStream(new FileOutputStream("C:\\Users\\Samir\\Documents\\NetBeansProjects\\pruebas\\src\\main\\java\\com\\miras\\pruebas\\biases.net"))) {
+        try (ObjectOutputStream out2 = new ObjectOutputStream(new FileOutputStream("C:\\Users\\samir\\Documents\\NetBeansProjects\\Files\\Java Utilities\\biases.net"))) {
             out2.writeObject(b);
         }
         
-        File MNIST_test = new File("C:\\Users\\Samir\\Documents\\NetBeansProjects\\pruebas\\src\\main\\java\\com\\miras\\pruebas\\MNIST_test");
+        File MNIST_test = new File("C:\\Users\\samir\\Documents\\NetBeansProjects\\Files\\Java Utilities\\MNIST_test.large");
         Scanner inputT = new Scanner(MNIST_test);
         
         Double[][] inputsT = new Double[10000][784];

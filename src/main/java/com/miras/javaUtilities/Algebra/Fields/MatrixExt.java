@@ -2,9 +2,12 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.miras.pruebas;
+package com.miras.javaUtilities.Algebra.Fields;
 
-import java.util.ArrayList;
+import com.miras.javaUtilities.Algebra.Field;
+import com.miras.javaUtilities.MultilinealSpace;
+import com.miras.javaUtilities.WrongDimensionException;
+
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -13,22 +16,17 @@ import java.util.stream.Stream;
  *
  * @author Samir Lyaoui Vidal
  * @param <E>
- * @param <T>
  */
-public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T>, E> {
+public class MatrixExt<E extends Field<E>> implements MultilinealSpace<MatrixExt<E>, E>, Field<MatrixExt<E>> {
         
     private E[][] matrix;
     private E[][] Tmatrix;
     private int n;
     private int m;
+    final int DIM = 2;
     
     public E[][] getMatrix(){
         return matrix;
-    }
-    
-    public Number[][] getNumMatrix(){
-        NumberField[][] mat = (NumberField[][]) matrix;
-        return Stream.of(mat).map(x -> Stream.of(x).map(y -> y.getValue()).toArray(Number[]::new)).toArray(Number[][]::new);
     }
 
     public E[][] getTmatrix() {
@@ -76,7 +74,7 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
         return TMatrix;
     }
     
-    public MatrixExt<E, T> trasponer(){
+    public MatrixExt<E> trasponer(){
         E[][] TMatrix = (E[][]) new Field[this.m][this.n];
         for (int i = 0; i < this.n; i++){
             for (int j = 0; j < this.m; j++){
@@ -86,9 +84,9 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
         return new MatrixExt((E[][]) TMatrix, m, n);
     }
     
-    public MatrixExt<E, T> Triangular(){
+    public MatrixExt<E> Triangular(){
         E zero = this.matrix[0][0].zero();
-        MatrixExt<E, T> Triangular = new MatrixExt<>(this.matrix, this.n, this.m);
+        MatrixExt<E> Triangular = new MatrixExt<>(this.matrix, this.n, this.m);
         for(int j = 0; j < Triangular.m; j++){
             for(int i = j + 1; i < Triangular.n; i++){
                 if(Triangular.matrix[i][j].equals(zero)){
@@ -111,7 +109,7 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
     
     public E getDet(){
         E det = this.matrix[0][0].one();
-        MatrixExt<E, T> Triangular = this.Triangular();
+        MatrixExt<E> Triangular = this.Triangular();
         for(int j = 0; j < this.m; j++){
             det = det.mult(Triangular.matrix[j][j]);
         }
@@ -124,7 +122,7 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
         }
     }
 
-    public MatrixExt<E, T> one(int n){
+    public MatrixExt<E> one(int n){
         
         E[][] I = (E[][]) new Field[n][n];
         for(E[] x: I){
@@ -139,7 +137,7 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
     }
     
     @Override
-    public MatrixExt<E, T> sum(MatrixExt<E, T> other){
+    public MatrixExt<E> sum(MatrixExt<E> other){
         if(this.n != other.n || this.m != other.m){
             throw new WrongDimensionException("Las dimensiones de las matrices deben coincidir");
         }
@@ -152,14 +150,14 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
             }
         }
         
-        return new MatrixExt(C, this.n, this.m);
+        return new MatrixExt<>(C, this.n, this.m);
     }
     
     @Override
-    public MatrixExt<E, T> dif(MatrixExt<E, T> other){
+    public MatrixExt<E> dif(MatrixExt<E> other){
         
-        int maxN = this.n > other.n ? this.n : other.n;
-        int maxM = this.m > other.m ? this.m : other.m;
+        int maxN = Math.max(this.n, other.n);
+        int maxM = Math.max(this.m, other.m);
         
         E[][] a = (E[][]) new Field[maxN][maxM];
         E[][] b = (E[][]) new Field[maxN][maxM];
@@ -182,7 +180,7 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
     }
     
     @Override
-    public boolean isEqualTo(MatrixExt<E, T> other){
+    public boolean isEqualTo(MatrixExt<E> other){
         
         if(other.n != this.n || other.m != this.m){
             return false;
@@ -199,7 +197,7 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
     }
     
     @Override
-    public MatrixExt<E, T> mult(MatrixExt<E, T> other){
+    public MatrixExt<E> mult(MatrixExt<E> other){
         
         if(this.m != other.n){
             throw new WrongDimensionException("Las dimensiones de las matrices no son las adecuadas");
@@ -219,8 +217,9 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
         
         return new MatrixExt<>(c, this.n, other.m);
     }
-    
-    public MatrixExt<E, T> mult(E n){
+
+    @Override
+    public MatrixExt<E> scale(E factor){
         
         E[][] a = (E[][]) new Field[this.getN()][this.getM()];
         
@@ -230,14 +229,14 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
         
         for(E[] e : a){
             for(E ep : e){
-                ep = ep.mult(n);
+                ep = ep.mult(factor);
             }
         }
         
         return new MatrixExt<>(a, this.n, this.m);
     }
     
-    public MatrixExt<E, T> Adj(boolean traspuesta){
+    public MatrixExt<E> Adj(boolean traspuesta){
         
         E zero = this.matrix[0][0].zero();
         E one = this.matrix[0][0].one();
@@ -260,7 +259,7 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
                     a[i][jp] = zero;
                 }
                 a[i][j] = one;
-                MatrixExt<E, T> menor = new MatrixExt<>(a, this.n, this.m);
+                MatrixExt<E> menor = new MatrixExt<>(a, this.n, this.m);
                 b[i][j] = (i+j)%2 == 0 ? menor.getDet() : menor.getDet().op();
             }
         }
@@ -268,16 +267,16 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
     }
     
     @Override
-    public MatrixExt<E, T> inv(){
-        return this.Adj(true).mult(this.getDet().inv());
+    public MatrixExt<E> inv(){
+        return this.Adj(true).scale(this.getDet().inv());
     }
     
     @Override
-    public MatrixExt<E, T> div(MatrixExt<E, T> B){
+    public MatrixExt<E> div(MatrixExt<E> B){
         return mult(B.inv());
     }
     
-    public MatrixExt<E, T> zero(int n, int m){
+    public MatrixExt<E> zero(int n, int m){
         
         E[][] c = (E[][]) new Field[n][m];
         
@@ -300,7 +299,8 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
         return str.toString();
     }
     
-    public MatrixExt applyInComponents(Function<E, E> func){
+    @Override
+    public MatrixExt<E> applyInComponents(Function<E, E> func){
         E[][] A = (E[][]) new Field[this.n][this.m];
         for(int i = 0; i < A.length; i++){
             A[i] = (E[]) Arrays.asList(this.matrix[i]).stream().map(func).toArray(Field[]::new);
@@ -322,13 +322,13 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
         throw new WrongDimensionException("La matriz solo puede tener una fila o una columna");
     }
     
-    public PolinomioExt<E, T> getCharacteristicPolynomial(){
+    public PolinomioExt<E> getCharacteristicPolynomial(){
         
         E aux = this.get(0, 0);
         Field[] aux2 = {aux.zero(), aux.one()};
-        MatrixExt<PolinomioExt<E, T>, E> X = new MatrixExt();
+        MatrixExt<PolinomioExt<E>, E> X = new MatrixExt();
         X = X.one().mult(new PolinomioExt(aux2, 1, 'x'));
-        MatrixExt<PolinomioExt<E, T>, E> A = new MatrixExt((PolinomioExt<E, T>[][]) Stream.of(this.matrix).map(row -> Stream.of(row).map(x -> {
+        MatrixExt<PolinomioExt<E>, E> A = new MatrixExt((PolinomioExt<E>[][]) Stream.of(this.matrix).map(row -> Stream.of(row).map(x -> {
             Field[] a = {x};
             return new PolinomioExt(a, 0, 'x');
         }).toArray(Field[]::new)).toArray(Field[][]::new), this.n, this.m);
@@ -338,48 +338,192 @@ public class MatrixExt<E extends Field<E, T>, T> implements Field<MatrixExt<E, T
 */
 
     @Override
-    public MatrixExt<E, T> op() {
+    public MatrixExt<E> op() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public MatrixExt<E, T> one() {
+    public MatrixExt<E> one() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public MatrixExt<E, T> zero() {
+    public MatrixExt<E> zero() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public MatrixExt<E, T> clone() {
+    public MatrixExt<E> clone() {
         return new MatrixExt<>(matrix, n, m);
     }
 
     @Override
-    public MatrixExt<E, T> sqrt() {
+    public MatrixExt<E> abs() {
+        return this.applyInComponents(Field::abs);
+    }
+
+    @Override
+    public MatrixExt<E> scale(double factor) {
+        return this.applyInComponents(x -> x.scale(factor));
+    }
+
+    @Override
+    public MatrixExt<E> sqrt() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public boolean isGreaterThan(MatrixExt<E, T> other) {
+    public boolean isGreaterThan(MatrixExt<E> other) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public boolean isLessThan(MatrixExt<E, T> other) {
+    public boolean isLessThan(MatrixExt<E> other) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public MatrixExt<E, T> multExt(E k) {
+    public int compareTo(MatrixExt<E> o) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public int compareTo(MatrixExt<E, T> o) {
+    public E mod() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public E dotProduct() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public MatrixExt<E> ln() {
+        return this.applyInComponents(Field::ln);
+    }
+
+    @Override
+    public MatrixExt<E> log() {
+        return this.applyInComponents(Field::log);
+    }
+
+    @Override
+    public MatrixExt<E> exp() {
+        return this.applyInComponents(Field::exp);
+    }
+
+    @Override
+    public MatrixExt<E> expNum(double base) {
+        return this.applyInComponents((entry) -> entry.expNum(base));
+    }
+
+    @Override
+    public MatrixExt<E> expGen(double exponent) {
+        MatrixExt<E> matrix = this.clone();
+        for(int i = 0; i < exponent; i++){
+            matrix = matrix.mult(this);
+        }
+        return matrix;
+    }
+
+    @Override
+    public MatrixExt<E> sin() {
+        return this.applyInComponents(Field::sin);
+    }
+
+    @Override
+    public MatrixExt<E> cos() {
+        return this.applyInComponents(Field::cos);
+    }
+
+    @Override
+    public MatrixExt<E> arcsin() {
+        return this.applyInComponents(Field::arcsin);
+    }
+
+    @Override
+    public MatrixExt<E> arccos() {
+        return this.applyInComponents(Field::arccos);
+    }
+
+    @Override
+    public MatrixExt<E> tan() {
+        return this.applyInComponents(Field::tan);
+    }
+
+    @Override
+    public MatrixExt<E> arctan() {
+        return this.applyInComponents(Field::arctan);
+    }
+
+    @Override
+    public MatrixExt<E> sec() {
+        return this.applyInComponents(Field::sec);
+    }
+
+    @Override
+    public MatrixExt<E> cosec() {
+        return this.applyInComponents(Field::cosec);
+    }
+
+    @Override
+    public MatrixExt<E> cotan() {
+        return this.applyInComponents(Field::cotan);
+    }
+
+    @Override
+    public MatrixExt<E> sinh() {
+        return this.applyInComponents(Field::sinh);
+    }
+
+    @Override
+    public MatrixExt<E> cosh() {
+        return this.applyInComponents(Field::cosh);
+    }
+
+    @Override
+    public MatrixExt<E> arcsinh() {
+        return this.applyInComponents(Field::arcsinh);
+    }
+
+    @Override
+    public MatrixExt<E> arccosh() {
+        return this.applyInComponents(Field::arccosh);
+    }
+
+    @Override
+    public MatrixExt<E> tanh() {
+        return this.applyInComponents(Field::tanh);
+    }
+
+    @Override
+    public MatrixExt<E> cotanh() {
+        return this.applyInComponents(Field::cotanh);
+    }
+
+    @Override
+    public MatrixExt<E> arctanh() {
+        return this.applyInComponents(Field::arctanh);
+    }
+
+    @Override
+    public MatrixExt<E> sech() {
+        return this.applyInComponents(Field::sech);
+    }
+
+    @Override
+    public MatrixExt<E> cosech() {
+        return this.applyInComponents(Field::cosech);
+    }
+
+    @Override
+    public MatrixExt<E> arcsech() {
+        return this.applyInComponents(Field::arcsech);
+    }
+
+    @Override
+    public MatrixExt<E> arccosech() {
+        return this.applyInComponents(Field::arccosech);
     }
     
 }
