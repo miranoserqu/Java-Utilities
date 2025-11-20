@@ -4,105 +4,99 @@
  */
 package com.miras.javaUtilities.Algebra;
 
-import java.util.function.Function;
-
 /**
  *
  * @author Samir Lyaoui Vidal
- * @param <T> The Field in which the Structure is defined
+ * @param <E> The Field in which the Structure is defined
  */
-public interface Field<T extends Field<T>> extends Comparable<T> {
+public interface Field<E extends Field<E, T>, T> extends Ring<E, T> {
+
+    E dif(E other);
+    E div(E other);
+    E sqrt();
+    E op();
+    E inv();
+    E clone();
+    E abs();
+    E scale(double factor);
     
-    T sum(T other);
-    T dif(T other);
-    T mult(T other);
-    T div(T other);
-    T sqrt();
-    T op();
-    T inv();
-    T one();
-    T zero();
-    T clone();
-    T abs();
-    T scale(double factor);
+    boolean isEqualTo(E other);
+    boolean isGreaterThan(E other);
+    boolean isLessThan(E other);
     
-    boolean isEqualTo(T other);
-    boolean isGreaterThan(T other);
-    boolean isLessThan(T other);
-    
-    default T ln(){
+    default E ln(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T log(){
+    default E log(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T exp(){
+    default E exp(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T expNum(double base){
+    default E expNum(double base){
         throw new UnsupportedOperationException("No procede");
     }
-    default T expGen(double exponent){
+    default E expGen(double exponent){
         throw new UnsupportedOperationException("No procede");
     }
-    default T sin(){
+    default E sin(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T cos(){
+    default E cos(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arcsin(){
+    default E arcsin(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arccos(){
+    default E arccos(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T tan(){
+    default E tan(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arctan(){
+    default E arctan(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T sec(){
+    default E sec(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T cosec(){
+    default E cosec(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T cotan(){
+    default E cotan(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T sinh(){
+    default E sinh(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T cosh(){
+    default E cosh(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arcsinh(){
+    default E arcsinh(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arccosh(){
+    default E arccosh(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T tanh(){
+    default E tanh(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T cotanh(){
+    default E cotanh(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arctanh(){
+    default E arctanh(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T sech(){
+    default E sech(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T cosech(){
+    default E cosech(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arcsech(){
+    default E arcsech(){
         throw new UnsupportedOperationException("No procede");
     }
-    default T arccosech(){
+    default E arccosech(){
         throw new UnsupportedOperationException("No procede");
     }
         

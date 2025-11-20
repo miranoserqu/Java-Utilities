@@ -15,13 +15,19 @@ public class ElementalFunctions {
 
         @Override
         public ElementalFunctionInstance clone(){
-            return null;
+            return ElementalFunction.super.clone();
         }
 
         @Override
-        public FunctionTree getTree(){
-            return new FunctionTree(this);
+        public String toString(){
+            return getOperator();
         }
+
+        @Override
+        public boolean sinType(){
+            return true;
+        }
+
     }
 
     public static final Supplier<ElementalFunction<?>> LN = () -> new ElementalFunctionInstance() {
@@ -108,7 +114,7 @@ public class ElementalFunctions {
 
         @Override
         public FunctionTree getDerivative() {
-            return ElementalFunctions.VARIABLE.get().getTree().scale(10.0).op();
+            return new FunctionTree().scale(10.0).op();
         }
     };
 
@@ -168,6 +174,11 @@ public class ElementalFunctions {
             return base.intValue() + "^{arg1}";
         }
 
+        @Override
+        public boolean sinType(){
+            return false;
+        }
+
         @SafeVarargs
         @Override
         public final <T extends Field<T>> T apply(T... values) {
@@ -211,7 +222,22 @@ public class ElementalFunctions {
 
         @Override
         public String getOperator() {
-            return "() ^ " + exponentValue.toString();
+            return "^";
+        }
+
+        @Override
+        public int priority(){
+            return 1;
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
+        }
+
+        @Override
+        public String toString(){
+            return this.getOperator() + exponentValue.toString();
         }
 
         @Override
@@ -1120,7 +1146,7 @@ public class ElementalFunctions {
         @Override
         public FunctionTree getDerivative() {
             // Derivative of arcsech(x) is -1 / (x * sqrt(1 - x^2))
-            return ONE.get().getTree().dif(EXPGEN.apply(2.0).getTree()).sqrt().mult(VARIABLE.get().getTree()).inv().op();
+            return ONE.get().getTree().dif(EXPGEN.apply(2.0).getTree()).sqrt().mult(new FunctionTree()).inv().op();
         }
     };
 
@@ -1185,6 +1211,16 @@ public class ElementalFunctions {
         }
 
         @Override
+        public int priority(){
+            return 3;
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
+        }
+
+        @Override
         public String getLaTex() {
             return "(arg1) + (arg2)";
         }
@@ -1227,6 +1263,16 @@ public class ElementalFunctions {
         @Override
         public String getOperator() {
             return "-";
+        }
+
+        @Override
+        public int priority(){
+            return 3;
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
         }
 
         @Override
@@ -1275,8 +1321,18 @@ public class ElementalFunctions {
         }
 
         @Override
+        public int priority(){
+            return 2;
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
+        }
+
+        @Override
         public String getLaTex() {
-            return "arg1 \\multiply arg2";
+            return "arg1 \\cdot arg2";
         }
 
         @SafeVarargs
@@ -1308,7 +1364,6 @@ public class ElementalFunctions {
 
         @Override
         public FunctionTree getDerivative() {
-            // Derivative of f(x)*g(x) is f'(x)g(x) + f(x)g'(x) (Product Rule)
             return null;
         }
     };
@@ -1322,6 +1377,16 @@ public class ElementalFunctions {
         @Override
         public String getLaTex() {
             return "\\frac{arg1}{arg2}";
+        }
+
+        @Override
+        public int priority(){
+            return 2;
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
         }
 
         @SafeVarargs
@@ -1372,6 +1437,11 @@ public class ElementalFunctions {
             return "\\sqrt{arg1}";
         }
 
+        @Override
+        public boolean sinType(){
+            return false;
+        }
+
         @SafeVarargs
         @Override
         public final <T extends Field<T>> T apply(T... values) {
@@ -1418,6 +1488,11 @@ public class ElementalFunctions {
         }
 
         @Override
+        public boolean sinType(){
+            return false;
+        }
+
+        @Override
         public FunctionTree getDerivative() {
             return ZERO.get().getTree();
         }
@@ -1453,6 +1528,11 @@ public class ElementalFunctions {
         @Override
         public String getLaTex() {
             return "1";
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
         }
 
         @Override
@@ -1497,6 +1577,11 @@ public class ElementalFunctions {
         }
 
         @Override
+        public boolean sinType(){
+            return false;
+        }
+
+        @Override
         public FunctionTree getDerivative() {
             return OP.get().getTree();
         }
@@ -1532,48 +1617,61 @@ public class ElementalFunctions {
         }
     };
 
-    public static final Supplier<ElementalFunction<?>> VARIABLE = () -> new ElementalFunctionInstance() {
+    public static final Function<Variable, ElementalFunction<?>> VARIABLE = (variable) -> new ElementalFunctionInstance() {
+
+        int index = variable.getNumber();
+        String varName = variable.getLaTexRepr();
+
         @Override
         public String getOperator() {
-            return "x";
+            return varName;
         }
 
         @Override
         public String getLaTex() {
-            return "x";
+            return varName;
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
+        }
+
+        @Override
+        public boolean single(){
+            return true;
         }
 
         @Override
         public FunctionTree getDerivative() {
-            // Derivative of x is 1
             return ONE.get().getTree();
         }
 
         @SafeVarargs
         @Override
         public final <R extends Field<R>> R apply(R... values) {
-            if (values.length == 0 || values[0] == null) {
+            if (values.length == 0 || values[index] == null) {
                 return null;
             }
-            return values[0];
+            return values[index];
         }
 
         @Override
         public double apply(double... values) {
             if (values.length == 0) return 0;
-            return values[0];
+            return values[index];
         }
 
         @Override
         public int apply(int... values) {
             if (values.length == 0) return 0;
-            return values[0];
+            return values[index];
         }
 
         @Override
         public float apply(float... values) {
             if (values.length == 0) return 0;
-            return values[0];
+            return values[index];
         }
     };
 
@@ -1586,6 +1684,11 @@ public class ElementalFunctions {
         @Override
         public String getLaTex() {
             return "|arg1|";
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
         }
 
         @Override
@@ -1629,7 +1732,12 @@ public class ElementalFunctions {
 
         @Override
         public String getLaTex() {
-            return factor.intValue() + "\\multiply (arg1)";
+            return factor.intValue() + "\\cdot (arg1)";
+        }
+
+        @Override
+        public boolean sinType(){
+            return false;
         }
 
         @Override
@@ -1645,17 +1753,17 @@ public class ElementalFunctions {
 
         @Override
         public double apply(double... values) {
-            return 0;
+            return factor * values[0];
         }
 
         @Override
         public int apply(int... values) {
-            return 0;
+            return Double.valueOf(factor * values[0]).intValue();
         }
 
         @Override
         public float apply(float... values) {
-            return 0;
+            return Double.valueOf(factor * values[0]).floatValue();
         }
     };
 

@@ -43,12 +43,20 @@ public class Pruebas {
         System.out.println(p1.derivate(p1.mult(p1, p2)).toString());
 */
 
-        GeneralFunctionTree generalFunctionTree = new GeneralFunctionTree(2, 1, new TreeMap[]{new FunctionTreeBlock(new Variable(0, "x"), ElementalFunctions.VARIABLE.get().getTree()).mult(new FunctionTreeBlock(new Variable(1, "y"), ElementalFunctions.VARIABLE.get().getTree())).getRepr()});
+        FunctionTree functionTree = ElementalFunctions.MULT.get().getTree();
+        functionTree.insert(2, new FunctionTreeBlock(new Variable(0, "x"), new FunctionTree()));
+        functionTree.insert(3, new FunctionTreeBlock(new Variable(1, "y"), new FunctionTree()));
 
-        GeneralFunctionTree derivative = (GeneralFunctionTree) generalFunctionTree.getDerivative(new Variable(0, "x"));
+        GeneralFunctionTree generalFunctionTree = new GeneralFunctionTree(2, new FunctionTree[]{functionTree, functionTree.sin()});
 
-        System.out.println(generalFunctionTree.toString());
-    }
+        System.out.println(functionTree);
+        System.out.println(functionTree.getPartialDerivative(0).simplify());
+        System.out.println(functionTree.getPartialDerivative(0).getPartialDerivative(0).simplify());
+
+        System.out.println(functionTree.sin().arctan().ln().getPartialDerivative(0));
+        System.out.println(functionTree.sin().expGen(2).getLaTex());
+        System.out.println(functionTree.sin().expGen(2).getPartialDerivative(0).simplify().getLaTex());
+        }
     
     public static void print(String string) {
         System.out.println(string);

@@ -29,7 +29,7 @@ public class NewMain {
      */
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
         
-        Double[][] a = {
+        /*Double[][] a = {
             {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
             {0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
             {0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
@@ -85,7 +85,6 @@ public class NewMain {
         
         System.out.println("leyendo answers");
         Float[][] answers = (Float[][]) in2.readObject();
-        */
         
         System.out.println("Importando weights y biases");
         ObjectInputStream in2 = new ObjectInputStream(new FileInputStream("C:\\Users\\samir\\Documents\\NetBeansProjects\\Files\\Java Utilities\\weights.net"));
@@ -181,6 +180,56 @@ public class NewMain {
         }
         
         System.out.println(correct / inputsT.length);
+        */
+
+        Double[][] inputs = {
+                {0.0, 0.0},
+                {0.0, 1.0},
+                {1.0, 0.0},
+                {1.0, 1.0}
+        };
+        Double[][] outputs = {
+                {0.0},
+                {1.0},
+                {1.0},
+                {0.0}
+        };
+
+        // 2. Crear red [2, 2, 1]
+        Integer[] nNeurons = {2, 2, 1};
+        NeuralNetwork nn = new NeuralNetwork(nNeurons);
+
+        // 3. Parámetros de entrenamiento
+        double learningRate = 0.5;
+        int epochs = 10000;
+        int batchSize = 4; // usa todos los ejemplos
+
+        // 4. Entrenamiento
+        for (int epoch = 0; epoch < epochs; epoch++) {
+            nn.train(inputs, outputs, batchSize, "Sigmoid", learningRate);
+
+            // Calcula pérdida media cada 100 iteraciones
+            if (epoch % 100 == 0) {
+                double loss = 0.0;
+                for (int i = 0; i < inputs.length; i++) {
+                    Double[] prediction = nn.getResultOf(new Vector<>(inputs[i]), nn.getSigmoid());
+                    System.out.println(Arrays.toString(prediction));
+                    System.out.println(outputs[i][0]);
+                    double error = prediction[0] - outputs[i][0];
+                    loss += error * error;
+                }
+                loss /= inputs.length;
+                System.out.printf("Epoch %d | Loss: %.6f%n", epoch, loss);
+            }
+        }
+
+        // 5. Resultados finales
+        System.out.println("\nResultados finales:");
+        for (int i = 0; i < inputs.length; i++) {
+            Double[] prediction = nn.getResultOf(new Vector<>(inputs[i]), nn.getSigmoid());
+            System.out.printf("Entrada: [%.0f, %.0f] => Salida esperada: %.0f | Predicha: %.3f%n",
+                    inputs[i][0], inputs[i][1], outputs[i][0], prediction[0]);
+        }
     }
     
 }

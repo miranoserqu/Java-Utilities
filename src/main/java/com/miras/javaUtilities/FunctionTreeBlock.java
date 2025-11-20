@@ -16,23 +16,46 @@ public class FunctionTreeBlock implements ElementalFunction<FunctionTreeBlock>, 
 
     }
 
+    public TreeMap<Integer, ElementalFunction<?>> getRepr(){
+        return this.functionTree.getRepr();
+    }
+
     @Override
     public String toString(){
-        return this.functionTree.customToString(1, variable.getLaTexRepr());
+        return this.functionTree.customToString(1, this.variable.getLaTexRepr());
     }
 
     @Override
     public String getOperator() {
-        return this.functionTree.getOperator();
+        return "FunctionTreeBlock";
+    }
+
+    @Override
+    public int priority(){
+        return this.functionTree.priority();
+    }
+
+    @Override
+    public boolean single(){
+        return this.functionTree.single();
+    }
+
+    @Override
+    public boolean sinType(){
+        return this.functionTree.sinType();
     }
 
     @Override
     public String getLaTex() {
-        return this.functionTree.customGetLaTex(variable.getLaTexRepr());
+        return this.functionTree.customGetLaTex(1, variable.getLaTexRepr());
     }
 
     @Override
-    public FunctionTreeBlock getDerivative() {
+    public FunctionTree getDerivative(){
+        return null;
+    }
+
+    public FunctionTreeBlock getBlockDerivative() {
         return new FunctionTreeBlock(this.variable, this.functionTree.getDerivative());
     }
 
@@ -103,7 +126,7 @@ public class FunctionTreeBlock implements ElementalFunction<FunctionTreeBlock>, 
 
     @Override
     public FunctionTreeBlock inv() {
-        return operate(ElementalFunctions.I.get());
+        return new FunctionTreeBlock(this.variable, this.functionTree.inv());
     }
 
     @Override
@@ -270,4 +293,5 @@ public class FunctionTreeBlock implements ElementalFunction<FunctionTreeBlock>, 
     public FunctionTreeBlock arccosech() {
         return ElementalFunction.super.arccosech();
     }
+
 }

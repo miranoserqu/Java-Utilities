@@ -12,12 +12,24 @@ import com.miras.javaUtilities.Algebra.Field;
  */
 public interface Operator<T extends Operator<T>> extends Field<T> {
 
-    <E extends ElementalFunction<E>> E getDerivative();
+    FunctionTree getDerivative();
     
     <R extends Field<R>> R apply(R... values);
 
     double apply(double... values);
     int apply(int... values);
     float apply(float... values);
-    
+
+    default int priority(){
+        return 0;
+    }
+
+    default boolean single(){
+        return false;
+    }
+
+    default boolean sinType(){
+        return false;
+    }
+
 }

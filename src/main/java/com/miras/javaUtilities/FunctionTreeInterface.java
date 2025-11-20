@@ -26,7 +26,7 @@ public class FunctionTreeInterface implements ElementalFunction<FunctionTreeInte
 
     @Override
     public String getLaTex() {
-        return this.functionTree.customGetLaTex(this.variable);
+        return this.functionTree.customGetLaTex(1, this.variable);
     }
 
     FunctionTreeInterface get(FunctionTree functionTree){

@@ -59,7 +59,7 @@ public class Matrix<E extends Number> implements MultilinealSpace<Matrix<E>, E>,
     
     public Matrix(E[][] mat, int n, int m){
         this.prototype = mat[0][0];
-        this.matrix = (E[][]) Array.newInstance(prototype.getClass(), n, m);
+        this.matrix = mat; //(E[][]) Array.newInstance(prototype.getClass(), n, m);
         this.Tmatrix = this.trasponerArr();
         this.n = n;
         this.m = m;

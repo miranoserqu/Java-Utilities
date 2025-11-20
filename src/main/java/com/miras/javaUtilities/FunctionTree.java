@@ -16,7 +16,7 @@ import static com.miras.javaUtilities.ElementalFunctions.*;
  */
 public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<FunctionTree> {
 
-    protected final TreeMap<Integer, ElementalFunction<?>> repr;
+    protected TreeMap<Integer, ElementalFunction<?>> repr;
 
     @Override
     public FunctionTree getTree() {
@@ -30,7 +30,22 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
 
     @Override
     public String getOperator(){
-        return customToString(1, "arg1");
+        return "FunctionTree";
+    }
+
+    @Override
+    public int priority(){
+        return this.repr.get(1) == null ? 0 : this.repr.get(1).priority();
+    }
+
+    @Override
+    public boolean single(){
+        return this.repr.get(1).single();
+    }
+
+    @Override
+    public boolean sinType(){
+        return this.repr.get(1) != null && this.repr.get(1).sinType();
     }
 
     public TreeMap<Integer, ElementalFunction<?>> getRepr(){
@@ -38,33 +53,39 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
     }
 
     public String customToString(int position, String variable){
-        if(this.repr.get(position) == null){
-            return variable;
-        }
-        if(this.repr.get(position).equals(SUM.get())){
-            return customToString(position * 2, variable) + " + " + customToString(position * 2 + 1, variable);
-        } else if(this.repr.get(position).equals(DIF.get())){
-            return customToString(position * 2, variable) + " - " + customToString(position * 2 + 1, variable);
-        } else if(this.repr.get(position).equals(MULT.get())){
-            ElementalFunction<?> leftChild = this.repr.get(position * 2);
-            ElementalFunction<?> rightChild = this.repr.get(position * 2 + 1);
+        if(this.repr.get(position) instanceof ElementalFunction<?> elementalFunction) {
+            if (ElementalFunction.equals(elementalFunction, SUM.get())) {
+                return customToString(position * 2, variable) + " + " + customToString(position * 2 + 1, variable);
+            } else if (ElementalFunction.equals(elementalFunction, DIF.get())) {
+                return customToString(position * 2, variable) + " - " + customToString(position * 2 + 1, variable);
+            } else if (ElementalFunction.equals(elementalFunction, MULT.get())) {
+                ElementalFunction<?> leftChild = this.repr.get(position * 2);
+                ElementalFunction<?> rightChild = this.repr.get(position * 2 + 1);
 
-            if(leftChild != null && leftChild.equals(ONE.get())) {
-                return customToString(position * 2 + 1, variable);
-            } else if(rightChild != null && rightChild.equals(ONE.get())) {
-                return customToString(position * 2, variable);
-            } else{
-                return customToString(position * 2, variable) + " * " + customToString(position * 2 +1, variable);
+                if (leftChild != null && leftChild.equals(ONE.get())) {
+                    return customToString(position * 2 + 1, variable);
+                } else if (rightChild != null && rightChild.equals(ONE.get())) {
+                    return customToString(position * 2, variable);
+                } else {
+                    return customToString(position * 2, variable) + " * " + customToString(position * 2 + 1, variable);
+                }
+            } else if (ElementalFunction.equals(elementalFunction, DIV.get())) {
+                return "(" + customToString(position * 2, variable) + " / " + customToString(position * 2 + 1, variable) + ")";
+            } else if (ElementalFunction.equals(elementalFunction, VARIABLE.get())) {
+                return variable;
+            } else if(ElementalFunction.equals(elementalFunction, ONE.get())){
+                return "1";
+            } else if (ElementalFunction.equals(elementalFunction, ZERO.get())) {
+                return "0";
+            } else if(elementalFunction.getOperator().equals("FunctionTreeBlock")) {
+                return elementalFunction.toString();
+            } else if(elementalFunction.getOperator().equals("FunctionTree")){
+                return elementalFunction.toString();
             }
-        } else if(this.repr.get(position).equals(DIV.get())){
-            return customToString(position * 2, variable) + " / " + customToString(position * 2 + 1, variable);
-        } else if(this.repr.get(position).equals(VARIABLE.get())){
-            return variable;
-        } else if(this.repr.get(1).equals(ONE.get())){
-            return "1";
+            String operator = elementalFunction.getOperator();
+            return operator.substring(0, operator.length() - 1) + customToString(position * 2, variable) + operator.charAt(operator.length() - 1);
         }
-        String operator = this.repr.get(position).getOperator();
-        return operator.substring(0, operator.length() - 1) + customToString(position * 2, variable) + operator.charAt(operator.length() - 1);
+        return variable;
     }
     
     public FunctionTree(ElementalFunction<?> function){
@@ -82,37 +103,139 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
 
     @Override
     public FunctionTree getDerivative() {
-        if(this.repr.get(1) == null){
-            return ONE.get().getTree();
-        }
-        if(this.repr.get(1).equals(SUM.get())){
-            return this.getSubTree(2).getDerivative().sum(this.getSubTree(3).getDerivative());
-        } else if(this.repr.get(1).equals(DIF.get())){
-            return this.getSubTree(2).getDerivative().dif(this.getSubTree(3).getDerivative());
-        } else if(this.repr.get(1).equals(MULT.get())){
-            return this.getSubTree(2).getDerivative().mult(this.getSubTree(3)).sum(this.getSubTree(3).getDerivative().mult(this.getSubTree(2)));
-        } else if(this.repr.get(1).equals(DIV.get())){
-            return this.getSubTree(2).getDerivative().mult(this.getSubTree(3)).dif(this.getSubTree(3).getDerivative().mult(this.getSubTree(2))).div(this.getSubTree(3).expGen(2.0));
-        } else if(this.repr.get(1).equals(ONE.get())){
-            return ZERO.get().getTree();
-        } else if(this.repr.get(1).equals(ZERO.get())){
-            return ZERO.get().getTree();
-        } else if(this.repr.get(1).equals(VARIABLE.get())) {
-            return ONE.get().getTree();
-        } else if(this.repr.get(1).equals(OP.get())) {
-            return this.getSubTree(2).getDerivative().op();
-        } else{
-            if(this.repr.get(2) == null || this.repr.get(2).equals(VARIABLE.get())){
-                return this.repr.get(1).getDerivative();
-            }
-            FunctionTree tree = this.repr.get(1).getDerivative();
-            tree.simbolicApply(1, this.getSubTree(2));
-            tree = tree.mult(this.getSubTree(2).getDerivative());
-            return tree;
-        }
+        return new FunctionTree(customGetDerivative(1, 0));
     }
 
-    public void insert(int position, FunctionTree tree){
+    public FunctionTree getPartialDerivative(int variable){
+        return new FunctionTree(customGetDerivative(1, variable));
+    }
+
+    private TreeMap<Integer, ElementalFunction<?>> customGetDerivative(int position, int variable){
+        if(this.repr.get(position) instanceof ElementalFunction<?> elementalFunction) {
+            if (ElementalFunction.equals(elementalFunction, SUM.get())) {
+                FunctionTree functionTree = SUM.get().getTree();
+                functionTree.insert(2, new FunctionTree(customGetDerivative(2 * position, variable)));
+                functionTree.insert(3, new FunctionTree(customGetDerivative(2 * position + 1, variable)));
+                return functionTree.getRepr();
+            } else if (ElementalFunction.equals(elementalFunction, DIF.get())) {
+                FunctionTree functionTree = DIF.get().getTree();
+                functionTree.insert(2, new FunctionTree(customGetDerivative(2 * position, variable)));
+                functionTree.insert(3, new FunctionTree(customGetDerivative(2 * position + 1, variable)));
+                return functionTree.getRepr();
+            } else if (ElementalFunction.equals(elementalFunction, MULT.get())) {
+                FunctionTree functionTree = SUM.get().getTree();
+                functionTree.insert(2, MULT.get());
+                functionTree.insert(3, MULT.get());
+                functionTree.insert(4, new FunctionTree(customGetDerivative(2 * position, variable)));
+                functionTree.insert(5, this.getSubTree(2 * position + 1));
+                functionTree.insert(6, new FunctionTree(customGetDerivative(2 * position + 1, variable)));
+                functionTree.insert(7, this.getSubTree(2 * position));
+                return functionTree.getRepr();
+            } else if (ElementalFunction.equals(elementalFunction, DIV.get())) {
+                FunctionTree functionTree = DIV.get().getTree();
+                functionTree.insert(2, DIF.get());
+                functionTree.insert(3, EXPGEN.apply(2d));
+                functionTree.insert(4, MULT.get());
+                functionTree.insert(5, MULT.get());
+                functionTree.insert(6, this.getSubTree(position * 2 + 1));
+                functionTree.insert(8, new FunctionTree(customGetDerivative(2 * position, variable)));
+                functionTree.insert(9, this.getSubTree(2 * position + 1));
+                functionTree.insert(10, new FunctionTree(customGetDerivative(2 * position + 1, variable)));
+                functionTree.insert(11, this.getSubTree(2 * position));
+                return functionTree.getRepr();
+            } else if (ElementalFunction.equals(elementalFunction, ONE.get())) {
+                return ZERO.get().getTree().getRepr();
+            } else if (ElementalFunction.equals(elementalFunction, ZERO.get())) {
+                return ZERO.get().getTree().getRepr();
+            } else if (ElementalFunction.equals(elementalFunction, VARIABLE.get())) {
+                return ONE.get().getTree().getRepr();
+            } else if (ElementalFunction.equals(elementalFunction, OP.get())) {
+                return this.getSubTree(2 * position).op().getRepr();
+            } else if (elementalFunction.getOperator().equals("FunctionTreeBlock")) {
+                FunctionTreeBlock functionTreeBlock = (FunctionTreeBlock) elementalFunction;
+                if (functionTreeBlock.getVariable().getNumber() == variable) {
+                    return functionTreeBlock.getBlockDerivative().getRepr();
+                } else {
+                    return ZERO.get().getTree().getRepr();
+                }
+            } else if (elementalFunction.getOperator().equals("FunctionTree")) {
+                FunctionTree tree = (FunctionTree) elementalFunction;
+                return tree.getPartialDerivative(variable).getRepr();
+            } else {
+                if (this.repr.get(2 * position) == null || ElementalFunction.equals(this.repr.get(2 * position), VARIABLE.get())) {
+                    return this.repr.get(position).getDerivative().getRepr();
+                }
+                FunctionTree tree = this.repr.get(position).getDerivative();
+                tree.simbolicApply(1, new FunctionTree(this.getSubTree(2 * position)));
+                tree = tree.mult(new FunctionTree(customGetDerivative(2 * position, variable)));
+                return tree.getRepr();
+            }
+        }
+        return ONE.get().getTree().getRepr();
+    }
+
+    public FunctionTree simplify(){
+        return customSimplify(1);
+    }
+
+    private FunctionTree customSimplify(int position){
+        if(this.repr.get(position) instanceof ElementalFunction<?> elementalFunction){
+            if(ElementalFunction.equals(elementalFunction, MULT.get())){
+                FunctionTree left = customSimplify(2 * position);
+                FunctionTree right = customSimplify(2 * position + 1);
+                if(ElementalFunction.equals(left.repr.get(1), ZERO.get()) || ElementalFunction.equals(right.repr.get(1), ZERO.get())){
+                    return new FunctionTree(ZERO.get());
+                } else if (ElementalFunction.equals(left.repr.get(1), ONE.get()) && ElementalFunction.equals(right.repr.get(1), ONE.get())){
+                    return new FunctionTree(ONE.get());
+                } else if (ElementalFunction.equals(left.repr.get(1), ONE.get())){
+                    return right;
+                } else if (ElementalFunction.equals(right.repr.get(1), ONE.get())){
+                    return left;
+                } else if (ElementalFunction.equals(right.repr.get(1), OP.get())){
+                    FunctionTree result = new FunctionTree(SUM.get());
+                    result.insert(2, left);
+                    result.insert(3, right.getSubTree(2));
+                    return result;
+                }
+            } else if (ElementalFunction.equals(elementalFunction, SUM.get())) {
+                FunctionTree left = customSimplify(2 * position);
+                FunctionTree right = customSimplify(2 * position + 1);
+                if (ElementalFunction.equals(left.repr.get(1), ZERO.get())){
+                    return right;
+                } else if (ElementalFunction.equals(right.repr.get(1), ZERO.get())) {
+                    return left;
+                } else if (ElementalFunction.equals(right.repr.get(1), ZERO.get()) && ElementalFunction.equals(left.repr.get(1), ZERO.get())){
+                    return ZERO.get().getTree();
+                }
+            } else if (ElementalFunction.equals(elementalFunction, DIF.get())) {
+                FunctionTree left = customSimplify(2 * position);
+                FunctionTree right = customSimplify(2 * position + 1);
+                if (ElementalFunction.equals(left.repr.get(1), ZERO.get())){
+                    return right.op();
+                } else if (ElementalFunction.equals(right.repr.get(1), ZERO.get())) {
+                    return left;
+                } else if (ElementalFunction.equals(right.repr.get(1), ZERO.get()) && ElementalFunction.equals(left.repr.get(1), ZERO.get())){
+                    return ZERO.get().getTree();
+                }
+            } else if (ElementalFunction.equals(elementalFunction, DIV.get())){
+                FunctionTree left = customSimplify(2 * position);
+                if (ElementalFunction.equals(left.repr.get(1), ZERO.get())){
+                    return ZERO.get().getTree();
+                }
+            } else if (elementalFunction.toString().equals("^1")){
+                return customSimplify(2 * position);
+            }
+        }
+        if(this.repr.get(position) == null){
+            return VARIABLE.get().getTree();
+        }
+        FunctionTree result = new FunctionTree(this.repr.get(position));
+        result.insert(2, customSimplify(2 * position));
+        result.insert(3, customSimplify(2 * position + 1));
+        return result;
+    }
+
+    private void insert(int position, FunctionTree tree){
         this.customInsert(position, 1, tree);
     }
 
@@ -161,7 +284,7 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
         }
     }
 
-    public void simbolicApply(int position, FunctionTree tree){
+    void simbolicApply(int position, FunctionTree tree){
         if(this.repr.get(position).equals(SUM.get()) || this.repr.get(position).equals(DIF.get()) || this.repr.get(position).equals(MULT.get()) || this.repr.get(position).equals(DIV.get())) {
             if (this.repr.get(position * 2 + 1) == null || this.repr.get(position * 2 + 1).equals(VARIABLE.get())) {
                 this.insert(position * 2 + 1, tree);
@@ -176,23 +299,70 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
         }
     }
 
-    public String customGetLaTex(String variable){
-        if(this.repr.get(1) == null || this.repr.get(1).equals(VARIABLE.get())){
-            return variable;
+    public String customGetLaTex(int position, String variable){
+        if(this.repr.get(position) instanceof ElementalFunction<?> elementalFunction) {
+            if(elementalFunction.getOperator().equals("FunctionTree")){
+                FunctionTree functionTree = (FunctionTree) elementalFunction;
+                return functionTree.getLaTex();
+            } else if (elementalFunction.getOperator().equals("FunctionTree")){
+                FunctionTreeBlock functionTreeBlock = (FunctionTreeBlock) elementalFunction;
+                return functionTreeBlock.getLaTex();
+            } else if (ElementalFunction.equals(elementalFunction, SUM.get())) {
+                return ((elementalFunction.priority() < this.repr.get(2 * position).priority() ? "(arg1) + " : "arg1 + ") +
+                        (elementalFunction.priority() < this.repr.get(2 * position + 1).priority() ? "(arg2)" : "arg2"))
+                        .replace("arg1", customGetLaTex(2 * position, variable))
+                        .replace("arg2", customGetLaTex(2 * position + 1, variable));
+            } else if (ElementalFunction.equals(elementalFunction, DIF.get())) {
+                return ((elementalFunction.priority() < this.repr.get(2 * position).priority() ? "(arg1) - " : "arg1 - ") +
+                        (elementalFunction.priority() < this.repr.get(2 * position + 1).priority() ? "(arg2)" : "arg2"))
+                        .replace("arg1", customGetLaTex(2 * position, variable))
+                        .replace("arg2", customGetLaTex(2 * position + 1, variable));
+            } else if (ElementalFunction.equals(elementalFunction, MULT.get())) {
+                return ((elementalFunction.priority() < this.repr.get(2 * position).priority() ? "(arg1) \\cdot " : "arg1 \\cdot ") +
+                        (elementalFunction.priority() < this.repr.get(2 * position + 1).priority() ? "(arg2)" : "arg2"))
+                        .replace("arg1", customGetLaTex(2 * position, variable))
+                        .replace("arg2", customGetLaTex(2 * position + 1, variable));
+            } else if (elementalFunction.getOperator().equals("^")) {
+                if (!this.repr.get(2 * position).sinType()) {
+                    return (this.repr.get(2 * position).single() || this.repr.get(2 * position) == null ? elementalFunction.getLaTex().replace("(arg1)", "{arg1}") : elementalFunction.getLaTex())
+                            .replace("arg1", customGetLaTex(2 * position, variable));
+                } else {
+                    return this.repr.get(2 * position).getLaTex().replace("(arg1)", "^{" + elementalFunction.toString().substring(1) + "}(" + customGetLaTex(4 * position, variable) + ")");
+                }
+            } else if (getNumberArgs(elementalFunction) == 1) {
+                return elementalFunction.getLaTex().replace("arg1", customGetLaTex(2 * position, variable));
+            }
+            return elementalFunction.getLaTex().replace("arg1", customGetLaTex(2 * position, variable)).replace("arg2", customGetLaTex(2 * position + 1, variable));
         }
-        if(getNumberArgs(this.repr.get(1)) == 1){
-            return this.repr.get(1).getLaTex().replace("arg1", getSubTree(2).getLaTex());
+        return variable;
+    }
+
+    public FunctionTree semiApply(double value, int variable){
+        return customSemiApply(value, variable, 1);
+    }
+
+    private FunctionTree customSemiApply(double value, int variable, int position){
+        FunctionTree result = new FunctionTree(this.repr.get(position));
+        if(this.repr.get(position) == null || ElementalFunction.equals(this.repr.get(position), VARIABLE.get())){
+            return new ConstantNumber<Double>().CONSTANTNUMBER.apply(value).getTree();
+        } else {
+            result.insert(2, customSemiApply(value, variable, 2 * position));
+            result.insert(3, customSemiApply(value, variable, 2 * position + 1));
         }
-        return this.repr.get(1).getLaTex().replace("arg1", getSubTree(2).getLaTex()).replace("arg2", getSubTree(3).getLaTex());
+        return result;
     }
 
     public String getLaTex(){
-        return this.customGetLaTex("x");
+        return this.customGetLaTex(1, "x");
     }
 
     protected int getNumberArgs(ElementalFunction<?> elementalFunction){
         String expression = elementalFunction.getLaTex();
         return expression.contains("arg2") ? 2 : 1;
+    }
+
+    public void insert(int position, ElementalFunction elementalFunction){
+        this.repr.put(position, elementalFunction);
     }
 
     @Override
@@ -386,6 +556,10 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
         return function;
     }
 
+    public
+
+    public abstract FunctionSuccession sum(FunctionSuccession other);
+
     @Override
     public FunctionTree sqrt() {
         return operate(SQRT.get());
@@ -413,7 +587,7 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
 
     @Override
     public FunctionTree clone() {
-        return null;
+        return new FunctionTree(this.repr);
     }
 
     @Override
@@ -423,7 +597,9 @@ public class FunctionTree implements ElementalFunction<FunctionTree>, Operator<F
 
     @Override
     public FunctionTree scale(double factor) {
-        return null;
+        FunctionTree result = new FunctionTree(SCALE.apply(factor));
+        result.insert(2, this);
+        return result;
     }
 
     @Override

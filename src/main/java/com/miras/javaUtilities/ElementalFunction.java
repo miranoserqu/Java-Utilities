@@ -4,6 +4,8 @@
  */
 package com.miras.javaUtilities;
 
+import java.util.Objects;
+
 /**
  *
  * @author Samir Lyaoui Vidal
@@ -17,7 +19,7 @@ public interface ElementalFunction<T extends ElementalFunction<T>> extends Opera
     String getOperator();
     String getLaTex();
 
-    default <E extends ElementalFunction<E>> E getDerivative(Variable variable) {
+    default FunctionTree getDerivative(Variable variable) {
         return null;
     }
 
@@ -226,8 +228,8 @@ public interface ElementalFunction<T extends ElementalFunction<T>> extends Opera
         return 0;
     }
 
-    default boolean equals(ElementalFunction other){
-        return this.getOperator() == other.getOperator();
+    public static boolean equals(ElementalFunction one, ElementalFunction other){
+        return one.getOperator().equals(other.getOperator());
     }
 
 }

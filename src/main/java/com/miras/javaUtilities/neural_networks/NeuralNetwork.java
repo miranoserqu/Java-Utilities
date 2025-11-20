@@ -24,14 +24,10 @@ public class NeuralNetwork {
     private Vector<Double>[] pseudoActivation;
     private final Integer[] nNeurons;
     private final int nLayers;
-    private final double minGrad = 0.01;
-    private final double maxGrad = 0.001;
+    private final double clipGrad = 5.0;
     
     private final Function<Double, Double> sigmoid = x -> 1 / (1 + Math.exp(-x));
-    private final Function<Double, Double> dSigmoid = x -> {
-        double sig = sigmoid.apply(x);
-        return sig * (1 - sig);
-    };
+    private final Function<Double, Double> dSigmoid = a -> a * (1 - a);
 
     
     
@@ -40,24 +36,28 @@ public class NeuralNetwork {
         this.nNeurons = nNeurons;
         this.nLayers = nNeurons.length;
         Double[][] aux = {{0.0}};
-        
-        Random rn = new Random();
-        
+
         this.weights = new Matrix[nLayers];
         this.biases = new Vector[nLayers];
-        this.weights[0] = new Matrix<>(aux, 1, 1);
-        this.biases[0] = new Vector(aux[0]);
-        
-        for(int i = 1; i < nLayers; i++){
-            final int fi = i;
-            Double[][] w = new Double[nNeurons[i]][nNeurons[i - 1]];
-            Double[] z = new Double[nNeurons[i]];
-            this.weights[i] = new Matrix<>(Stream.of(w)
-                    .map(row -> Stream.of(row)
-                            .map(x -> rn.nextGaussian())
-                            .toArray(Double[]::new))
-                    .toArray(Double[][]::new), nNeurons[i], nNeurons[i - 1]);
-            this.biases[i] = new Vector((Double[]) Stream.of(z).map(x -> 0.0).toArray(Double[]::new));
+
+        Random rn = new Random();
+
+        for (int i = 1; i < nLayers; i++) {
+            final int rows = nNeurons[i];
+            final int cols = nNeurons[i - 1];
+            Double[][] w = new Double[rows][cols];
+            Double[] b = new Double[rows];
+
+            double limit = Math.sqrt(6.0 / (rows + cols)); // Xavier
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    w[r][c] = (rn.nextDouble() * 2.0 - 1.0) * limit;
+                }
+                b[r] = 0.0;
+            }
+
+            this.weights[i] = new Matrix<>(w, rows, cols);
+            this.biases[i] = new Vector(b);
         }
         
     }
@@ -127,32 +127,38 @@ public class NeuralNetwork {
             }
                 
         }
-        
+
         Vector<Double>[][] batch = getMiniBatch(inputs, answers, batchSize);
         Vector<Double>[] Error = new Vector[nLayers];
         Matrix<Double>[] WeightsError = new Matrix[nLayers];
-        
-        for(int i = 0; i < batch.length; i++){
+
+        for (int i = 0; i < batch.length; i++) {
             Vector<Double> predict = new Vector(getResultOf(batch[i][0], func));
             Vector<Double>[] error = getError(predict, batch[i][1], dFunc);
             Matrix<Double>[] weightsError = getWeightsError(error);
-            for(int j = 1; j < nLayers; j++){
+            for (int j = 1; j < nLayers; j++) {
                 Error[j] = Error[j] == null ? error[j] : Error[j].sum(error[j]);
                 WeightsError[j] = WeightsError[j] == null ? weightsError[j] : WeightsError[j].sum(weightsError[j]);
             }
-            gradientDescend(Error, WeightsError, learninRate / batchSize);
         }
+
+        for (int j = 1; j < nLayers; j++) {
+            if (Error[j] != null) Error[j] = Error[j].scale(1.0 / batch.length);
+            if (WeightsError[j] != null) WeightsError[j] = WeightsError[j].scale(1.0 / batch.length);
+        }
+
+        gradientDescend(Error, WeightsError, learninRate);
         
     }
     
     public Vector<Double>[] getError(Vector<Double> predict, Vector<Double> answer, Function<Double, Double> activationFunctionDerivative){
         Vector<Double>[] error = new Vector[nLayers];
-        error[nLayers - 1] = predict.dif(answer).HadamardProduct(this.pseudoActivation[nLayers - 1]
-                .applyInComponents(activationFunctionDerivative));
+        error[nLayers - 1] = predict.dif(answer)
+                .HadamardProduct(this.activation[nLayers - 1]
+                        .applyInComponents(dSigmoid));
         for(int i = error.length - 2; i > 0; i--){
-            error[i] = this.weights[i + 1].trasponer().mult(error[i + 1]
-                    .toMatrix('c')).toVector()
-                    .HadamardProduct(this.pseudoActivation[i].applyInComponents(activationFunctionDerivative));
+            error[i] = this.weights[i + 1].trasponer().mult(error[i + 1].toMatrix('c')).toVector()
+                    .HadamardProduct(this.activation[i].applyInComponents(dSigmoid));
         }
         
         return error;
@@ -175,15 +181,21 @@ public class NeuralNetwork {
         
         return weightsError;
     }
-    
-    public void gradientDescend(Vector<Double>[] error, Matrix<Double>[] weightsError, double learninRate){
-        for(int layer = 1; layer < nLayers; layer++){
-            weightsError[layer] = weightsError[layer].scale(learninRate);
-            if(weightsError[layer].mod() < minGrad){
-                weightsError[layer] = weightsError[layer].scale(weightsError[layer].mod() / minGrad);
+
+    public void gradientDescend(Vector<Double>[] error, Matrix<Double>[] weightsError, double learningRate) {
+        for (int layer = 1; layer < nLayers; layer++) {
+            if (weightsError[layer] == null) continue;
+
+            double norm = weightsError[layer].mod();
+            if (norm > clipGrad) {
+                weightsError[layer] = weightsError[layer].scale(clipGrad / norm);
             }
-            this.weights[layer] = this.weights[layer].dif(weightsError[layer]);
-            this.biases[layer] = this.biases[layer].dif(error[layer].scale(learninRate));
+
+            Matrix<Double> deltaW = weightsError[layer].scale(learningRate);
+            Vector<Double> deltaB = error[layer].scale(learningRate);
+
+            this.weights[layer] = this.weights[layer].dif(deltaW);
+            this.biases[layer] = this.biases[layer].dif(deltaB);
         }
     }
 
