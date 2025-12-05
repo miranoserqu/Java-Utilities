@@ -4,19 +4,11 @@
  */
 package com.miras.javaUtilities.neural_networks;
 
-import com.miras.javaUtilities.Algebra.Fields.Vector;
-import java.io.File;
-import java.io.FileInputStream;
+import com.miras.javaUtilities.algebra.practical.PracticalVector;
+
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Stream;
 
 /**
  *
@@ -212,7 +204,7 @@ public class NewMain {
             if (epoch % 100 == 0) {
                 double loss = 0.0;
                 for (int i = 0; i < inputs.length; i++) {
-                    Double[] prediction = nn.getResultOf(new Vector<>(inputs[i]), nn.getSigmoid());
+                    Double[] prediction = nn.getResultOf(new PracticalVector<>(inputs[i]), nn.getSigmoid());
                     System.out.println(Arrays.toString(prediction));
                     System.out.println(outputs[i][0]);
                     double error = prediction[0] - outputs[i][0];
@@ -226,7 +218,7 @@ public class NewMain {
         // 5. Resultados finales
         System.out.println("\nResultados finales:");
         for (int i = 0; i < inputs.length; i++) {
-            Double[] prediction = nn.getResultOf(new Vector<>(inputs[i]), nn.getSigmoid());
+            Double[] prediction = nn.getResultOf(new PracticalVector<>(inputs[i]), nn.getSigmoid());
             System.out.printf("Entrada: [%.0f, %.0f] => Salida esperada: %.0f | Predicha: %.3f%n",
                     inputs[i][0], inputs[i][1], outputs[i][0], prediction[0]);
         }

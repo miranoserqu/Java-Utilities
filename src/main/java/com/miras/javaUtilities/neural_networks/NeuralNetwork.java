@@ -4,13 +4,12 @@
  */
 package com.miras.javaUtilities.neural_networks;
 
-import com.miras.javaUtilities.Algebra.Fields.Matrix;
-import com.miras.javaUtilities.Algebra.Fields.Vector;
+import com.miras.javaUtilities.algebra.practical.PracticalMatrix;
+import com.miras.javaUtilities.algebra.practical.PracticalVector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  *
@@ -18,10 +17,10 @@ import java.util.stream.Stream;
  */
 public class NeuralNetwork {
     
-    private Matrix<Double>[] weights;
-    private Vector<Double>[] biases;
-    private Vector<Double>[] activation;
-    private Vector<Double>[] pseudoActivation;
+    private PracticalMatrix<Double>[] weights;
+    private PracticalVector<Double>[] biases;
+    private PracticalVector<Double>[] activation;
+    private PracticalVector<Double>[] pseudoActivation;
     private final Integer[] nNeurons;
     private final int nLayers;
     private final double clipGrad = 5.0;
@@ -37,8 +36,8 @@ public class NeuralNetwork {
         this.nLayers = nNeurons.length;
         Double[][] aux = {{0.0}};
 
-        this.weights = new Matrix[nLayers];
-        this.biases = new Vector[nLayers];
+        this.weights = new PracticalMatrix[nLayers];
+        this.biases = new PracticalVector[nLayers];
 
         Random rn = new Random();
 
@@ -56,8 +55,8 @@ public class NeuralNetwork {
                 b[r] = 0.0;
             }
 
-            this.weights[i] = new Matrix<>(w, rows, cols);
-            this.biases[i] = new Vector(b);
+            this.weights[i] = new PracticalMatrix<>(w, rows, cols);
+            this.biases[i] = new PracticalVector(b);
         }
         
     }
@@ -66,18 +65,18 @@ public class NeuralNetwork {
         
         this.nNeurons = nNeurons;
         this.nLayers = nNeurons.length;
-        this.weights = new Matrix[nLayers];
-        this.biases = new Vector[nLayers];
+        this.weights = new PracticalMatrix[nLayers];
+        this.biases = new PracticalVector[nLayers];
         Double[][] aux = {{0.0}};
         
-        this.weights[0] = new Matrix(aux, 1, 1);
-        this.biases[0] = new Vector(aux[0]);
-        this.activation = new Vector[nLayers];
-        this.pseudoActivation = new Vector[nLayers];
+        this.weights[0] = new PracticalMatrix(aux, 1, 1);
+        this.biases[0] = new PracticalVector(aux[0]);
+        this.activation = new PracticalVector[nLayers];
+        this.pseudoActivation = new PracticalVector[nLayers];
         
         for(int i = 1; i < nLayers; i++){
-            this.weights[i] = new Matrix(weights.get(i), weights.get(i).length, weights.get(i)[0].length);
-            this.biases[i] = new Vector(biases.get(i));
+            this.weights[i] = new PracticalMatrix(weights.get(i), weights.get(i).length, weights.get(i)[0].length);
+            this.biases[i] = new PracticalVector(biases.get(i));
         }
         
     }
@@ -89,17 +88,17 @@ public class NeuralNetwork {
         }
     }
     
-    public Double[] getResultOf(Vector<Double> input, Function<Double, Double> activationFunction){
-        this.activation = new Vector[nLayers];
-        this.pseudoActivation = new Vector[nLayers];
+    public Double[] getResultOf(PracticalVector<Double> input, Function<Double, Double> activationFunction){
+        this.activation = new PracticalVector[nLayers];
+        this.pseudoActivation = new PracticalVector[nLayers];
         this.activation[0] = input;
         feedForward(activationFunction);
         return this.activation[nLayers - 1].getArray(Double[]::new);
     }
     
-    public Vector<Double>[][] getMiniBatch(Double[][] inputs, Double[][] answers, int batchSize){
+    public PracticalVector<Double>[][] getMiniBatch(Double[][] inputs, Double[][] answers, int batchSize){
         
-        ArrayList<Vector<Double>[]> selection = new ArrayList<>();
+        ArrayList<PracticalVector<Double>[]> selection = new ArrayList<>();
         Random rn = new Random();
         ArrayList<Integer> indexes = new ArrayList<>();
         
@@ -107,12 +106,12 @@ public class NeuralNetwork {
             int index = rn.nextInt(0, inputs.length);
             if(!indexes.contains(index)){
                 indexes.add(index);
-                Vector[] tuple = {new Vector(inputs[index]), new Vector(answers[index])};
+                PracticalVector[] tuple = {new PracticalVector(inputs[index]), new PracticalVector(answers[index])};
                 selection.add(tuple);
             }
         }
         
-        return selection.toArray(Vector[][]::new);
+        return selection.toArray(PracticalVector[][]::new);
     }
     
     public void train(Double[][] inputs, Double[][] answers, int batchSize, String activationFunction, double learninRate){
@@ -128,14 +127,14 @@ public class NeuralNetwork {
                 
         }
 
-        Vector<Double>[][] batch = getMiniBatch(inputs, answers, batchSize);
-        Vector<Double>[] Error = new Vector[nLayers];
-        Matrix<Double>[] WeightsError = new Matrix[nLayers];
+        PracticalVector<Double>[][] batch = getMiniBatch(inputs, answers, batchSize);
+        PracticalVector<Double>[] Error = new PracticalVector[nLayers];
+        PracticalMatrix<Double>[] WeightsError = new PracticalMatrix[nLayers];
 
         for (int i = 0; i < batch.length; i++) {
-            Vector<Double> predict = new Vector(getResultOf(batch[i][0], func));
-            Vector<Double>[] error = getError(predict, batch[i][1], dFunc);
-            Matrix<Double>[] weightsError = getWeightsError(error);
+            PracticalVector<Double> predict = new PracticalVector(getResultOf(batch[i][0], func));
+            PracticalVector<Double>[] error = getError(predict, batch[i][1], dFunc);
+            PracticalMatrix<Double>[] weightsError = getWeightsError(error);
             for (int j = 1; j < nLayers; j++) {
                 Error[j] = Error[j] == null ? error[j] : Error[j].sum(error[j]);
                 WeightsError[j] = WeightsError[j] == null ? weightsError[j] : WeightsError[j].sum(weightsError[j]);
@@ -151,8 +150,8 @@ public class NeuralNetwork {
         
     }
     
-    public Vector<Double>[] getError(Vector<Double> predict, Vector<Double> answer, Function<Double, Double> activationFunctionDerivative){
-        Vector<Double>[] error = new Vector[nLayers];
+    public PracticalVector<Double>[] getError(PracticalVector<Double> predict, PracticalVector<Double> answer, Function<Double, Double> activationFunctionDerivative){
+        PracticalVector<Double>[] error = new PracticalVector[nLayers];
         error[nLayers - 1] = predict.dif(answer)
                 .HadamardProduct(this.activation[nLayers - 1]
                         .applyInComponents(dSigmoid));
@@ -164,8 +163,8 @@ public class NeuralNetwork {
         return error;
     }
     
-    public Matrix<Double>[] getWeightsError(Vector<Double>[] error){
-        Matrix<Double>[] weightsError = new Matrix[nLayers];
+    public PracticalMatrix<Double>[] getWeightsError(PracticalVector<Double>[] error){
+        PracticalMatrix<Double>[] weightsError = new PracticalMatrix[nLayers];
         for(int k = 1; k < nLayers; k++){
             /*
             Double[][] mat = new Double[nNeurons[k]][nNeurons[k - 1]];
@@ -182,7 +181,7 @@ public class NeuralNetwork {
         return weightsError;
     }
 
-    public void gradientDescend(Vector<Double>[] error, Matrix<Double>[] weightsError, double learningRate) {
+    public void gradientDescend(PracticalVector<Double>[] error, PracticalMatrix<Double>[] weightsError, double learningRate) {
         for (int layer = 1; layer < nLayers; layer++) {
             if (weightsError[layer] == null) continue;
 
@@ -191,19 +190,19 @@ public class NeuralNetwork {
                 weightsError[layer] = weightsError[layer].scale(clipGrad / norm);
             }
 
-            Matrix<Double> deltaW = weightsError[layer].scale(learningRate);
-            Vector<Double> deltaB = error[layer].scale(learningRate);
+            PracticalMatrix<Double> deltaW = weightsError[layer].scale(learningRate);
+            PracticalVector<Double> deltaB = error[layer].scale(learningRate);
 
             this.weights[layer] = this.weights[layer].dif(deltaW);
             this.biases[layer] = this.biases[layer].dif(deltaB);
         }
     }
 
-    public Matrix<Double>[] getWeights() {
+    public PracticalMatrix<Double>[] getWeights() {
         return weights;
     }
 
-    public Vector<Double>[] getBiases() {
+    public PracticalVector<Double>[] getBiases() {
         return biases;
     }
 

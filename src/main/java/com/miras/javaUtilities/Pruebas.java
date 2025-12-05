@@ -1,8 +1,11 @@
 package com.miras.javaUtilities;
 
-import com.miras.javaUtilities.Algebra.Fields.Vector;
-
-import java.util.TreeMap;
+import com.miras.javaUtilities.calculus.numerical.DummyNumberFunction;
+import com.miras.javaUtilities.calculus.numerical.SumSeries;
+import com.miras.javaUtilities.calculus.symbolic.ElementalFunctions;
+import com.miras.javaUtilities.calculus.symbolic.GeneralFunctionTree;
+import com.miras.javaUtilities.calculus.symbolic.NumberFunctionTree;
+import com.miras.javaUtilities.calculus.symbolic.Variable;
 
 public class Pruebas {
 
@@ -43,20 +46,35 @@ public class Pruebas {
         System.out.println(p1.derivate(p1.mult(p1, p2)).toString());
 */
 
-        FunctionTree functionTree = ElementalFunctions.MULT.get().getTree();
-        functionTree.insert(2, new FunctionTreeBlock(new Variable(0, "x"), new FunctionTree()));
-        functionTree.insert(3, new FunctionTreeBlock(new Variable(1, "y"), new FunctionTree()));
+        NumberFunctionTree numberFunctionTree = ElementalFunctions.MULT.get().getTree();
+        numberFunctionTree.insert(2, ElementalFunctions.VARIABLE.apply(new Variable(0, "x")).getTree());
+        numberFunctionTree.insert(3, ElementalFunctions.VARIABLE.apply(new Variable(1, "y")).getTree());
 
-        GeneralFunctionTree generalFunctionTree = new GeneralFunctionTree(2, new FunctionTree[]{functionTree, functionTree.sin()});
+        GeneralFunctionTree generalFunctionTree = new GeneralFunctionTree(2, new NumberFunctionTree[]{numberFunctionTree, numberFunctionTree.sin()});
 
-        System.out.println(functionTree);
-        System.out.println(functionTree.getPartialDerivative(0).simplify());
-        System.out.println(functionTree.getPartialDerivative(0).getPartialDerivative(0).simplify());
+        System.out.println(numberFunctionTree);
+        System.out.println(numberFunctionTree.getPartialDerivative(new Variable(0, "x")).simplify());
+        System.out.println(numberFunctionTree.getPartialDerivative(new Variable(0, "x")).getPartialDerivative(new Variable(0, "x")).simplify());
 
-        System.out.println(functionTree.sin().arctan().ln().getPartialDerivative(0));
-        System.out.println(functionTree.sin().expGen(2).getLaTex());
-        System.out.println(functionTree.sin().expGen(2).getPartialDerivative(0).simplify().getLaTex());
-        }
+        System.out.println(numberFunctionTree.sin().arctan().ln().getPartialDerivative(new Variable(0, "x")));
+        System.out.println(numberFunctionTree.sin().expGen(2).getLaTex());
+        System.out.println(numberFunctionTree.sin().expGen(2).getPartialDerivative(new Variable(0, "x")).simplify().getLaTex());
+
+        NumberFunctionTree serie = new NumberFunctionTree();
+        serie.repr.put(1, ElementalFunctions.DIV.get());
+        serie.repr.put(2, ElementalFunctions.ONE.get());
+        serie.repr.put(3, ElementalFunctions.EXPGEN.apply(4d));
+        serie.repr.put(6, ElementalFunctions.VARIABLE.apply(new Variable(0, "n")));
+
+        System.out.println(new SumSeries(serie).compute(100000));
+
+        NumberFunctionTree functionTree = ElementalFunctions.SIN.get().getTree();
+        functionTree.insert(2, ElementalFunctions.VARIABLE.apply(new Variable(0, "x")).getTree());
+
+        System.out.println(DummyNumberFunction.dummyfier.apply(functionTree).apply(Math.PI));
+        System.out.println(DummyNumberFunction.dummyfier.apply(functionTree).getDerivative(0).apply(Math.PI));
+
+    }
     
     public static void print(String string) {
         System.out.println(string);
