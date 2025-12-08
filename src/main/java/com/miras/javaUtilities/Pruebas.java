@@ -1,11 +1,16 @@
 package com.miras.javaUtilities;
 
+import com.miras.javaUtilities.algebra.objects.*;
+import com.miras.javaUtilities.calculus.fourier.DFT;
 import com.miras.javaUtilities.calculus.numerical.DummyNumberFunction;
 import com.miras.javaUtilities.calculus.numerical.SumSeries;
 import com.miras.javaUtilities.calculus.symbolic.ElementalFunctions;
 import com.miras.javaUtilities.calculus.symbolic.GeneralFunctionTree;
 import com.miras.javaUtilities.calculus.symbolic.NumberFunctionTree;
 import com.miras.javaUtilities.calculus.symbolic.Variable;
+
+import java.util.Arrays;
+import java.util.function.Function;
 
 public class Pruebas {
 
@@ -61,18 +66,73 @@ public class Pruebas {
         System.out.println(numberFunctionTree.sin().expGen(2).getPartialDerivative(new Variable(0, "x")).simplify().getLaTex());
 
         NumberFunctionTree serie = new NumberFunctionTree();
-        serie.repr.put(1, ElementalFunctions.DIV.get());
-        serie.repr.put(2, ElementalFunctions.ONE.get());
-        serie.repr.put(3, ElementalFunctions.EXPGEN.apply(4d));
-        serie.repr.put(6, ElementalFunctions.VARIABLE.apply(new Variable(0, "n")));
+        serie.getRepr().put(1, ElementalFunctions.DIV.get());
+        serie.getRepr().put(2, ElementalFunctions.ONE.get());
+        serie.getRepr().put(3, ElementalFunctions.EXPGEN.apply(4d));
+        serie.getRepr().put(6, ElementalFunctions.VARIABLE.apply(new Variable(0, "n")));
 
-        System.out.println(new SumSeries(serie).compute(100000));
+        // --- Ejemplo con K = RealNumber ---
+        // Vectores de entrada: 2 vectores, de dimensiones 2 y 3
+        Vector<RealNumber> v1 = new Vector<>(new RealNumber[]{ new RealNumber(1), new RealNumber(2) });
+        Vector<RealNumber> v2 = new Vector<>(new RealNumber[]{ new RealNumber(3), new RealNumber(4), new RealNumber(5) });
+        Vector<RealNumber>[] inputs = new Vector[]{v1, v2};
 
-        NumberFunctionTree functionTree = ElementalFunctions.SIN.get().getTree();
-        functionTree.insert(2, ElementalFunctions.VARIABLE.apply(new Variable(0, "x")).getTree());
+        // Bases de covectores de salida: 2 vectores, dimensiones 2 y 3
+        Vector<RealNumber>[][] covectorBasis = new Vector[2][];
+        covectorBasis[0] = new Vector[2];
+        covectorBasis[1] = new Vector[3];
 
-        System.out.println(DummyNumberFunction.dummyfier.apply(functionTree).apply(Math.PI));
-        System.out.println(DummyNumberFunction.dummyfier.apply(functionTree).getDerivative(0).apply(Math.PI));
+        for(int i = 0; i < 2; i++) {
+            RealNumber[] coords = new RealNumber[2];
+            for(int j = 0; j < 2; j++) coords[j] = new RealNumber((i+1)*(j+1)); // valores distintos
+            covectorBasis[0][i] = new Vector<>(coords);
+        }
+
+        for(int i = 0; i < 3; i++) {
+            RealNumber[] coords = new RealNumber[3];
+            for(int j = 0; j < 3; j++) coords[j] = new RealNumber((i+2)*(j+2));
+            covectorBasis[1][i] = new Vector<>(coords);
+        }
+
+        // Funciones del tensor: devuelve suma ponderada de coordenadas de entrada
+        int totalVectors = v1.getRepr().length * v2.getRepr().length; // para indexación lineal
+        Function<Vector<RealNumber>[], RealNumber>[][] functions = new Function[totalVectors][totalVectors];
+
+        for(int li=0; li<totalVectors; li++){
+            for(int lj=0; lj<totalVectors; lj++){
+                final int indexSum = li + lj; // hacemos que cada función dependa de los índices
+                functions[li][lj] = vecs -> {
+                    RealNumber sum = new RealNumber(0);
+                    int factor = 1;
+                    for(Vector<RealNumber> vec : vecs){
+                        for(RealNumber x : vec.getRepr()){
+                            sum = sum.sum(x.scale(factor));
+                            factor++;
+                        }
+                    }
+                    sum = sum.sum(new RealNumber(indexSum)); // añadir un valor dependiente de (li, lj)
+                    return sum;
+                };
+            }
+        }
+
+        // Dimensiones de covectores
+        int[] covectorDims = {2, 3};
+
+        // Creamos el tensor
+        Tensor<RealNumber> tensor = new Tensor<>(functions, covectorDims, covectorBasis);
+
+        // Aplicamos
+        Vector<RealNumber>[] output = tensor.apply(inputs);
+
+        // Imprimimos resultados
+        for(int i = 0; i < output.length; i++){
+            System.out.print("Vector de salida " + i + ": ");
+            for(RealNumber x : output[i].getRepr()){
+                System.out.print(x.getValue() + " ");
+            }
+            System.out.println();
+        }
 
     }
     
